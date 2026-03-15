@@ -1,6 +1,6 @@
 class BinaryImage {
     // Decides if export format should be PPM4(false) or ESC/POS (true)
-    public static bool EscPos = false;
+    public static bool EscPos = true;
 
     public int Width, Height;
     bool[,] Data;

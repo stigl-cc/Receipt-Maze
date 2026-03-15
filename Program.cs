@@ -104,6 +104,7 @@
         Stack<Point2> History = new Stack<Point2>();
 
         Visited[Pos.X, Pos.Y] = true;
+
         while(true) {
             Direction[] PossibleDirections = GetPossibleDirections(Pos, false);
 
@@ -213,10 +214,54 @@
 }
 
 class Program {
-    public static void Main(string[] args) {
-        MazeGen mazeGen = new MazeGen(42, 64, 13, false);
-        mazeGen.Generate(389055);
-        //mazeGen.Print();
+    private static void ParseIntArgument(in string[] args, ref int i, ref int ParameterValue, string ParameterName) {
+        if(++i >= args.Length || !int.TryParse(args[i], out ParameterValue))
+            throw new ArgumentException($"{ParameterName} value was either not provided or was the wrong type, use e.g., -{ParameterName} 30");
+    }
+
+    public static int Main(string[] args) {
+        int
+            Width = 42,
+            Height = 64,
+            Scale = 13,
+            Seed = (int)DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+        bool Revisiting = false;
+
+        try {
+        for(int i =0; i < args.Length; i++) {
+            switch(args[i]) {
+                case "--width" or "-w":
+                    ParseIntArgument(in args, ref i, ref Width, "width");
+                    break;
+                case "--height" or "-h":
+                    ParseIntArgument(in args, ref i, ref Height, "height");
+                    break;
+                case "--scale" or "-s":
+                    ParseIntArgument(in args, ref i, ref Scale, "scale");
+                    break;
+                case "--seed":
+                    ParseIntArgument(in args, ref i, ref Seed, "seed");
+                    break;
+                case "--revisit" or "-r":
+                    Revisiting = true;
+                    break;
+                case "--help" or "-h":
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unknown option '{args[i]}', use -h or --help to get the usage.");
+            }
+        }
+        } catch (Exception e) when (e is ArgumentException || e is InvalidOperationException) {
+            // Lets not mess up regular stdout since its possibly being piped to a printer.
+            Console.Error.WriteLine(e.Message);
+            return 1;
+        }
+
+        Console.WriteLine($"Maze: w:{Width} h:{Height} s:{Scale} time: {DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
+        MazeGen mazeGen = new MazeGen(Width, Height, Scale, Revisiting);
+        mazeGen.Generate(Seed);
         mazeGen.Export().Export();
+        return 0;
     }
 }
