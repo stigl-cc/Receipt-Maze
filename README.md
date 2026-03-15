@@ -1,6 +1,6 @@
 # Receipt Maze Generator
-    Maze generator that outputs in ESC/POS (or alternatively PPM4) receipt printer format. 
-    The generator utilizes the Depth First Search algorithm making it both simple and performant.
+  Maze generator that outputs in ESC/POS (or alternatively PPM4) receipt printer format.  
+  The generator utilizes the Depth First Search algorithm making it both simple and performant.  
 
 ## Options
   `--help`               Get Help  
