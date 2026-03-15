@@ -214,9 +214,20 @@
 }
 
 class Program {
+    const string HelpString = @"ReceiptMaze v 0.0.1
+usage: receiptmaze [--width/-w maze_width] [--height/-h maze_height] [--scale/-s maze_image_scale] [--seed maze_gen_seed] [--revisit/-r] [--help]
+
+--help                 Get Help
+--width/-w <number>    Width of the maze grid (not of the resulting image) [default = 42]
+--height/-h <number>   Height of the maze grid (not of the resulting image) [default = 64]
+--scale/-s <number>    Pixels per maze grid cell [default = 13]
+--seed <number>        Seed for maze generation (makes for reproducible mazes) [default = current unix ms]
+--revisit/-r           Allows revisiting cells, leading to imperfect mazes and mazes with loops [default = false; flag by itself enables it]
+--ppm4/-p              Enables netpbm output instead of ESC/POS for receipt printers [default = escpos; flag by itself makes it netpbm]
+";
     private static void ParseIntArgument(in string[] args, ref int i, ref int ParameterValue, string ParameterName) {
         if(++i >= args.Length || !int.TryParse(args[i], out ParameterValue))
-            throw new ArgumentException($"{ParameterName} value was either not provided or was the wrong type, use e.g., -{ParameterName} 30");
+            throw new ArgumentException($"{ParameterName} value was either not provided or was the wrong type, use e.g., --{ParameterName} 30");
     }
 
     public static int Main(string[] args) {
@@ -227,6 +238,7 @@ class Program {
             Seed = (int)DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
         bool Revisiting = false;
+        bool EscPos = true;
 
         try {
         for(int i =0; i < args.Length; i++) {
@@ -246,10 +258,14 @@ class Program {
                 case "--revisit" or "-r":
                     Revisiting = true;
                     break;
-                case "--help" or "-h":
+                case "--ppm4" or "-p":
+                    EscPos = false;
                     break;
+                case "--help" or "-h":
+                    Console.Error.WriteLine(HelpString);
+                    return 0;
                 default:
-                    throw new InvalidOperationException($"Unknown option '{args[i]}', use -h or --help to get the usage.");
+                    throw new InvalidOperationException($"Unknown option '{args[i]}', --help to get the usage.");
             }
         }
         } catch (Exception e) when (e is ArgumentException || e is InvalidOperationException) {
@@ -261,7 +277,7 @@ class Program {
         Console.WriteLine($"Maze: w:{Width} h:{Height} s:{Scale} time: {DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
         MazeGen mazeGen = new MazeGen(Width, Height, Scale, Revisiting);
         mazeGen.Generate(Seed);
-        mazeGen.Export().Export();
+        mazeGen.Export().Export(EscPos);
         return 0;
     }
 }
